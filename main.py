@@ -23,9 +23,9 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 #TODO Add Comment
+COMMAND_PREFIX = "!"
 IGNORE_PREFIX = '$'
-CHANNELS = ['1199945205663674409',
-           '1117152162674393251']
+CHANNELS = ['1199945205663674409', '1117152162674393251']
 
 
 #Indicator of succesful connection
@@ -40,6 +40,15 @@ async def on_message(message):
   # Ignore messages from bots or that start with the IGNORE_PREFIX
   if message.author.bot or message.content.startswith(IGNORE_PREFIX):
     return
+
+  if message.content.startswith(COMMAND_PREFIX):
+    content = message.content.split(" ")
+    if content[0] == "!help":
+      await message.channel.send(
+          "‎ \n## __**Current Commands**__\n!help\n!repos [username]\n@Nimbot [Question]"
+      )
+    if content[0] == "!repos":
+      await message.channel.send(get_repos(content))
 
   if bot.user is None:
     return
@@ -107,13 +116,12 @@ async def on_message(message):
 def get_repos(username):
   data = {"type": "all", "sort": "full_name", "direction": "asc"}
 
-  username = username.split(" ")
-
   if len(username) != 2:
     return ("Invalid username.")
 
   username = username[1]
-  retstring = "\n" + username + "'s repositories:\n"
+
+  retstring = "‎ \n## __**" + username + "'s repositories**__\n"
 
   output = requests.get(
       "https://api.github.com/users/{}/repos".format(username),
@@ -121,7 +129,17 @@ def get_repos(username):
   output = json.loads(output.text)
 
   for reponame in output:
-    retstring += ("- " + reponame["name"] + "\n")
+    print(reponame["description"])
+
+    techStack = reponame["topics"]
+    techStack.append(reponame["language"])
+
+    techListString = ",".join(str(element) for element in techStack)
+
+    retstring += ("⋆ **[" + reponame["name"] + "](" + reponame["html_url"] +
+                  ") est. " + reponame["created_at"][0:4] + " [" +
+                  techListString + "]** \n *" + str(reponame["description"]) +
+                  "* \n")
 
   return retstring
 
