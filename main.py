@@ -9,32 +9,28 @@ from discord.ext import commands
 from discord import Intents
 from openai import OpenAI
 
-#TODO Add Comment
 load_dotenv()
 
-# Create bot with specific intents
+# Create intents for bot
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
 intents.messages = True
 intents.message_content = True
 
-#Enable all intents and create client
+#server constants
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-#TODO Add Comment
 COMMAND_PREFIX = "!"
 IGNORE_PREFIX = '$'
 CHANNELS = ['1199945205663674409', '1117152162674393251']
 
 
-#Indicator of succesful connection
+#Successful connection consol indicator
 @bot.event
 async def on_ready():
   print('Online as {0.user}'.format(bot))
 
 
-#TODO Add Comment
 @bot.event
 async def on_message(message):
   # Ignore messages from bots or that start with the IGNORE_PREFIX
@@ -45,7 +41,7 @@ async def on_message(message):
     content = message.content.split(" ")
     if content[0] == "!help":
       await message.channel.send(
-          "‎ \n## __**Current Commands**__\n!help\n!repos [username]\n@Nimbot [Question]"
+          "‎ \n## __**Current Commands**__\n!help\n!repos [username]\n@Nimbot [Chat GPT Question]"
       )
     if content[0] == "!repos":
       await message.channel.send(get_repos(content))
@@ -84,7 +80,7 @@ async def on_message(message):
 
       role = 'assistant' if msg.author.id == bot.user.id else 'user'
 
-      # Append the message to the conversation list with the correct structure
+      # Append the message to the conversation list
       conversation.append({
           'role': role,
           'name': username,
@@ -112,16 +108,18 @@ async def on_message(message):
         await message.reply(response_message[i:i + chunk_size])
 
 
-#TODO Add Comment
-def get_repos(username):
-  data = {"type": "all", "sort": "full_name", "direction": "asc"}
+#!repo command gets repositories from specified github username
+def get_repos(commandInput):
 
-  if len(username) != 2:
+  #Check for single username
+  if len(commandInput) != 2:
     return ("Invalid username.")
 
-  username = username[1]
+  username = commandInput[1]
 
-  retstring = "‎ \n## __**" + username + "'s repositories**__\n"
+  repositories = "‎ \n## __**" + username + "'s repositories**__\n"
+
+  data = {"type": "all", "sort": "full_name", "direction": "asc"}
 
   output = requests.get(
       "https://api.github.com/users/{}/repos".format(username),
@@ -129,20 +127,19 @@ def get_repos(username):
   output = json.loads(output.text)
 
   for reponame in output:
-    print(reponame["description"])
 
+    #Create string for repo techstack
     techStack = reponame["topics"]
     techStack.append(reponame["language"])
-
     techListString = ",".join(str(element) for element in techStack)
 
-    retstring += ("⋆ **[" + reponame["name"] + "](" + reponame["html_url"] +
-                  ") est. " + reponame["created_at"][0:4] + " [" +
-                  techListString + "]** \n *" + str(reponame["description"]) +
-                  "* \n")
+    #Discord text formatting
+    repositories += ("⋆ **[" + reponame["name"] + "](" + reponame["html_url"] +
+                     ") est. " + reponame["created_at"][0:4] + " [" +
+                     techListString + "]** \n *" +
+                     str(reponame["description"]) + "* \n")
 
-  return retstring
+  return repositories
 
 
-#Run the bot
 bot.run(os.environ['TOKEN'])
