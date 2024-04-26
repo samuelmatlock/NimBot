@@ -41,10 +41,13 @@ async def on_message(message):
     content = message.content.split(" ")
     if content[0] == "!help":
       await message.channel.send(
-          "‎ \n## __**Current Commands**__\n!help\n!repos [username]\n@Nimbot [Chat GPT Question]"
+          "‎ \n## __**Current Commands**__\n!help\n!nim\n!repos [username]\n@Nimbot [Chat GPT Question]"
       )
     if content[0] == "!repos":
       await message.channel.send(get_repos(content))
+
+    if content[0] == "!nim":
+      await message.channel.send("‎ \n(^･o･^)ﾉ” ")
 
   if bot.user is None:
     return
